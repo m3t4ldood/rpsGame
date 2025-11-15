@@ -1,123 +1,397 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Rock Paper Scissors Game</title>
-  <link rel="stylesheet" type="text/css" href="styles.css">
+  <style>
+    /* Background fixed top-to-bottom gradient */
+    html,body {
+      height:100%;
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    body {
+  margin:0;
+  height:100vh;
+  background: url("https://i.postimg.cc/7hTN5xXX/n2.png") no-repeat center center fixed;
+  background-size: cover;       /* Makes it full screen */
+  background-position: center;  /* Keeps it centered */
+  background-attachment: fixed; /* Keeps it locked while content scrolls */
+  font-family: Arial, Helvetica, sans-serif;
+  color:#e8e8ee;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  box-sizing:border-box;
+}
+
+    #game-container{
+      width:100%;
+      max-width:680px;
+      background: rgba(0,0,0,0.25);
+      border-radius:14px;
+      padding:20px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+      backdrop-filter: blur(6px);
+    }
+
+    h1.title {
+      margin:4px 0 12px 0;
+      font-size:20px;
+      letter-spacing:1px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
+
+    #controls {
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+
+    select, button, input[type="number"] {
+      background:#16161b;
+      color:#fff;
+      border:1px solid rgba(255,255,255,0.06);
+      padding:8px 12px;
+      border-radius:8px;
+      font-size:14px;
+    }
+
+    #choices {
+      display:flex;
+      justify-content:center;
+      gap:14px;
+      margin-top:12px;
+      margin-bottom:12px;
+      flex-wrap:wrap;
+    }
+
+    .choice {
+      font-size:44px;
+      width:86px;
+      height:86px;
+      border-radius:14px;
+      border:2px solid rgba(255,255,255,0.06);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+      user-select:none;
+      -webkit-user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .choice:active { transform: translateY(2px) scale(.98); }
+    .choice.disabled { opacity:0.45; cursor:default; pointer-events:none; }
+
+    #info {
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:8px;
+    }
+
+    #result {
+      margin-top:12px;
+      font-size:18px;
+      min-height:28px;
+      text-align:center;
+    }
+
+    #scoreboard {
+      margin-top:8px;
+      font-size:15px;
+      text-align:center;
+    }
+
+    #choices, #user-choice, #computer-choice {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    .small {
+      font-size:13px;
+      color: #ddd;
+    }
+
+    #footer-brand {
+      margin-top:14px;
+      text-align:center;
+      font-weight:600;
+      letter-spacing:1px;
+    }
+
+    /* Responsive */
+    @media (max-width:420px){
+      .choice { width:64px; height:64px; font-size:34px; }
+    }
+  </style>
 </head>
 <body>
   <div id="game-container">
-    <h1>Rock Paper Scissors Game</h1>
-    <div id="choices">
-      <button class="choice" onclick="play(1)">🪨</button>
-      <button class="choice" onclick="play(2)">📃</button>
-      <button class="choice" onclick="play(3)">✂️</button>
+    <h1 class="title">Rock Paper Scissors Game</h1>
+
+    <div id="controls">
+      <label class="small">Best of:
+        <select id="rounds-select" aria-label="Rounds">
+          <option value="1">1</option>
+          <option value="3">3</option>
+          <option value="5" selected>5</option>
+          <option value="7">7</option>
+          <option value="9">9</option>
+        </select>
+      </label>
+
+      <button id="start-btn">Start</button>
+      <button id="reset-btn">Reset</button>
+
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="small">Clicks:</span>
+        <div id="click-counter" class="small">0</div>
+      </div>
     </div>
-    <div id="result"></div>
-    <div id="computer-choice"></div>
-    <div id="user-choice"></div>
-    <div id="click-counter"></div>
+
+    <div id="status" class="small" style="text-align:center;margin-bottom:8px;">
+      Click a symbol or press 1 (Rock), 2 (Paper), 3 (Scissors)
+    </div>
+
+    <div id="round-display" class="small" style="text-align:center;margin-bottom:6px;"></div>
+
+    <div id="choices">
+      <button class="choice" id="rock" aria-label="Rock" onclick="play(1)">🪨</button>
+      <button class="choice" id="paper" aria-label="Paper" onclick="play(2)">📃</button>
+      <button class="choice" id="scissors" aria-label="Scissors" onclick="play(3)">✂️</button>
+    </div>
+
+    <div id="display" style="text-align:center; margin-top:8px;">
+      <div id="user-choice" class="small"></div>
+      <div id="computer-choice" class="small"></div>
+      <div id="result"></div>
+    </div>
+
+    <div id="scoreboard" class="small">
+      Score: You - <span id="user-score">0</span> | Computer - <span id="computer-score">0</span>
+    </div>
+
+    <div id="footer-brand">
+      <img src="https://i.postimg.cc/j2yBzskG/zoom-close.gif" alt="" height="18" width="18">
+      M3t4ldooD
+      <img src="https://i.postimg.cc/j2yBzskG/zoom-close.gif" alt="" height="18" width="18">
+    </div>
   </div>
-  <h1><img src="https://i.postimg.cc/j2yBzskG/zoom-close.gif" alt="" height="20px" width="20px">M3t4ldooD<img src="https://i.postimg.cc/j2yBzskG/zoom-close.gif" alt="" height="20px" width="20px"></h1>
-  <script>
-    // Variables for tracking scores and clicks
-let userScore = 0;
-let computerScore = 0;
-let clickCounter = 0;
-let rounds = 5; // Best of 5 rounds
-let currentRound = 1;
 
-// Function to handle user choice
-function play(userChoice) {
-  if (currentRound > rounds) {
-    resetGame();
-    return;
+<script>
+  // Keep your original identifiers where possible.
+  let userScore = 0;
+  let computerScore = 0;
+  let clickCounter = 0;
+  let rounds = 5;            // best of N (selected)
+  let currentRound = 1;      // current played rounds counter
+  let gameActive = false;    // only accept input while active
+
+  // DOM references
+  const userScoreEl = document.getElementById('user-score');
+  const compScoreEl = document.getElementById('computer-score');
+  const clickCounterEl = document.getElementById('click-counter');
+  const resultEl = document.getElementById('result');
+  const userChoiceEl = document.getElementById('user-choice');
+  const compChoiceEl = document.getElementById('computer-choice');
+  const roundDisplayEl = document.getElementById('round-display');
+
+  const choicesButtons = {
+    1: document.getElementById('rock'),
+    2: document.getElementById('paper'),
+    3: document.getElementById('scissors')
+  };
+
+  // Initialize UI
+  function init() {
+    document.getElementById('rounds-select').value = String(rounds);
+    updateUI();
   }
 
-  clickCounter++;
+  // Start game / apply rounds
+  document.getElementById('start-btn').addEventListener('click', () => {
+    rounds = parseInt(document.getElementById('rounds-select').value, 10) || 5;
+    startGame();
+  });
 
-  // Computer randomly selects 1 (Rock), 2 (Paper), or 3 (Scissors)
-  const computerChoice = Math.floor(Math.random() * 3) + 1;
+  document.getElementById('reset-btn').addEventListener('click', resetGame);
 
-  // Display user and computer choices
-  displayChoices(userChoice, computerChoice);
+  // Keyboard shortcuts: 1,2,3 to pick choices
+  document.addEventListener('keydown', (e) => {
+    if (!gameActive) return;
+    if (e.key === '1') play(1);
+    if (e.key === '2') play(2);
+    if (e.key === '3') play(3);
+  });
 
-  // Determine the winner of this round
-  const winner = determineWinner(userChoice, computerChoice);
+  // Main play function - userChoice is 1 rock, 2 paper, 3 scissors
+  function play(userChoice) {
+    if (!gameActive) return;
+    if (!([1,2,3].includes(userChoice))) return;
 
-  // Update scores based on the winner
-  updateScore(winner);
+    clickCounter++;
+    clickCounterEl.innerText = clickCounter;
 
-  // Update click counter display
-  document.getElementById('click-counter').innerText = `Clicks: ${clickCounter}`;
+    const computerChoice = Math.floor(Math.random() * 3) + 1;
 
-  // Check if the game is over (all rounds played)
-  if (currentRound === rounds) {
-    displayFinalWinner();
-  } else {
+    displayChoices(userChoice, computerChoice);
+
+    const winner = determineWinner(userChoice, computerChoice);
+    updateScore(winner);
+
+    // Advance round number and check for end
+    if (currentRound >= rounds) {
+      // All rounds played (best of N): decide by majority score OR early when majority reached.
+      // Best-of logic: first to majority wins (e.g., best of 5 => first to 3)
+      const majority = Math.floor(rounds / 2) + 1;
+      if (userScore >= majority || computerScore >= majority || currentRound === rounds) {
+        // End game now
+        gameActive = false;
+        displayFinalWinner();
+        setButtonsDisabled(true);
+        return;
+      }
+    }
     currentRound++;
-  }
-}
-
-// Function to display choices
-function displayChoices(userChoice, computerChoice) {
-  const choices = ['🪨', '📃', '✂️'];
-  document.getElementById('user-choice').innerText = `You chose: ${choices[userChoice - 1]}`;
-  document.getElementById('computer-choice').innerText = `Computer chose: ${choices[computerChoice - 1]}`;
-}
-
-// Function to determine the winner
-function determineWinner(userChoice, computerChoice) {
-  if (userChoice === computerChoice) {
-    document.getElementById('result').innerText = "It's a tie!";
-    return 'tie';
+    updateUI();
   }
 
-  if ((userChoice === 1 && computerChoice === 3) ||
-      (userChoice === 2 && computerChoice === 1) ||
-      (userChoice === 3 && computerChoice === 2)) {
-    document.getElementById('result').innerText = "You win this round!";
-    return 'user';
-  } else {
-    document.getElementById('result').innerText = "Computer wins this round!";
-    return 'computer';
-  }
-}
-
-// Function to update scores
-function updateScore(winner) {
-  if (winner === 'user') {
-    userScore++;
-  } else if (winner === 'computer') {
-    computerScore++;
-  }
-  document.getElementById('click-counter').innerText = `Score: You - ${userScore}, Computer - ${computerScore}`;
-}
-
-// Function to display the final winner after all rounds
-function displayFinalWinner() {
-  if (userScore > computerScore) {
-    document.getElementById('result').innerText = "Congratulations! You won the game!";
-  } else if (computerScore > userScore) {
-    document.getElementById('result').innerText = "Game over! The computer won the game.";
-  } else {
-    document.getElementById('result').innerText = "The game is a tie!";
+  // Display choices textually
+  function displayChoices(userChoice, computerChoice) {
+    const choices = ['🪨','📃','✂️'];
+    userChoiceEl.innerText = `You chose: ${choices[userChoice - 1]}`;
+    compChoiceEl.innerText = `Computer chose: ${choices[computerChoice - 1]}`;
   }
 
-  // Reset button to start a new game
-  document.getElementById('result').innerHTML += '<br><button onclick="resetGame()">Play Again</button>';
-}
+  // Determine winner of a single round
+  function determineWinner(u, c) {
+    if (u === c) {
+      resultEl.innerText = "It's a tie this round!";
+      return 'tie';
+    }
 
-// Function to reset the game
-function resetGame() {
-  userScore = 0;
-  computerScore = 0;
-  clickCounter = 0;
-  currentRound = 1;
-  document.getElementById('result').innerText = '';
-  document.getElementById('user-choice').innerText = '';
-  document.getElementById('computer-choice').innerText = '';
-  document.getElementById('click-counter').innerText = `Score: You - 0, Computer - 0`;
-}
-  </script>
+    // Winning combos: 1 beats 3, 2 beats 1, 3 beats 2
+    const userWins = (u === 1 && c === 3) || (u === 2 && c === 1) || (u === 3 && c === 2);
+
+    if (userWins) {
+      resultEl.innerText = "You win this round!";
+      return 'user';
+    } else {
+      resultEl.innerText = "Computer wins this round!";
+      return 'computer';
+    }
+  }
+
+  // Update scores and UI
+  function updateScore(winner) {
+    if (winner === 'user') userScore++;
+    if (winner === 'computer') computerScore++;
+    userScoreEl.innerText = userScore;
+    compScoreEl.innerText = computerScore;
+    updateUI();
+  }
+
+  // Show the final winner message
+  function displayFinalWinner() {
+    if (userScore > computerScore) {
+      resultEl.innerHTML = "🎉 Congratulations! You won the game!<br><button onclick='resetGame()'>Play Again</button>";
+    } else if (computerScore > userScore) {
+      resultEl.innerHTML = "💻 The computer won the game.<br><button onclick='resetGame()'>Play Again</button>";
+    } else {
+      resultEl.innerHTML = "🤝 The game is a tie!<br><button onclick='resetGame()'>Play Again</button>";
+    }
+    roundDisplayEl.innerText = `Final — Rounds played: ${currentRound}/${rounds}`;
+  }
+
+  // Start new game (keeps rounds selection)
+  function startGame() {
+    userScore = 0;
+    computerScore = 0;
+    clickCounter = 0;
+    currentRound = 1;
+    rounds = parseInt(document.getElementById('rounds-select').value, 10) || 5;
+    gameActive = true;
+    clickCounterEl.innerText = clickCounter;
+    userScoreEl.innerText = userScore;
+    compScoreEl.innerText = computerScore;
+    resultEl.innerText = '';
+    userChoiceEl.innerText = '';
+    compChoiceEl.innerText = '';
+    setButtonsDisabled(false);
+    updateUI();
+  }
+
+  // Reset everything to initial state
+  function resetGame() {
+    userScore = 0;
+    computerScore = 0;
+    clickCounter = 0;
+    rounds = parseInt(document.getElementById('rounds-select').value, 10) || 5;
+    currentRound = 1;
+    gameActive = false;
+    clickCounterEl.innerText = clickCounter;
+    userScoreEl.innerText = userScore;
+    compScoreEl.innerText = computerScore;
+    resultEl.innerText = '';
+    userChoiceEl.innerText = '';
+    compChoiceEl.innerText = '';
+    roundDisplayEl.innerText = '';
+    setButtonsDisabled(false);
+  }
+
+  // Toggle disabling of choice buttons
+  function setButtonsDisabled(disabled) {
+    Object.values(choicesButtons).forEach(btn => {
+      if (disabled) {
+        btn.classList.add('disabled');
+        btn.setAttribute('aria-disabled','true');
+      } else {
+        btn.classList.remove('disabled');
+        btn.removeAttribute('aria-disabled');
+      }
+    });
+  }
+
+  // Update UI elements like round display
+  function updateUI() {
+    roundDisplayEl.innerText = `Round: ${currentRound} / ${rounds}`;
+    // If game not active, show hint
+    if (!gameActive) {
+      document.getElementById('status').innerText = 'Press Start to begin or Reset to clear scores.';
+    } else {
+      document.getElementById('status').innerText = 'Make your choice (or press 1/2/3).';
+    }
+  }
+
+  // Prevent accidental double-taps on mobile and enable touch-friendly behavior
+  Object.values(choicesButtons).forEach((btn, idx) => {
+    // friendly tap fallback for older mobile browsers
+    btn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (!gameActive) return;
+      play(Number(Object.keys(choicesButtons)[idx]));
+    }, {passive:false});
+  });
+
+  // Initialize on load
+  init();
+</script>
 </body>
 </html>
